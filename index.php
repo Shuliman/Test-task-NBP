@@ -1,14 +1,9 @@
 <?php
 
 require_once 'CurrencyConverter.php';
+$config = require 'config.php';
 
-// Create an instance of CurrencyConverter with PDO dependency injection
-$dbHost = 'localhost';
-$dbUser = 'root';
-$dbPass = '';
-$dbName = 'currency_converter';
-$pdo = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8", $dbUser, $dbPass);
-$converter = new CurrencyConverter($pdo);
+$converter = new CurrencyConverter($config);
 
 // Form handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

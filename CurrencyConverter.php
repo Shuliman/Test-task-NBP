@@ -2,11 +2,23 @@
 
 class CurrencyConverter
 {
-    private $pdo;
+    private $servername;
+    private $database;
+    private $username;
+    private $password;
+    private $options;
+    public $tableName;
+    public $connection;
 
-    public function __construct(PDO $pdo)
+    public function __construct($config)
     {
-        $this->pdo = $pdo;
+        $this->servername = $config['db']['host'];
+        $this->database = $config['db']['dbname'];
+        $this->username = $config['db']['username'];
+        $this->password = $config['db']['password'];
+        $this->options = $config['db']['options'];
+        $this->tableName = $config['db']['tableName'];
+        $this->connection = new PDO("mysql:host=$this->servername;dbname=$this->database", $this->username, $this->password, $this->options);
     }
 
     public function convertCurrency($amount, $sourceCurrency, $targetCurrency)
@@ -65,13 +77,13 @@ class CurrencyConverter
 
     public function saveConversionResult($amount, $sourceCurrency, $targetCurrency, $convertedAmount)
     {
-        $stmt = $this->pdo->prepare("INSERT INTO conversion_results (amount, source_currency, target_currency, converted_amount, date) VALUES (?, ?, ?, ?, NOW())");
+        $stmt = $this->connection->prepare("INSERT INTO conversion_results (amount, source_currency, target_currency, converted_amount, date) VALUES (?, ?, ?, ?, NOW())");
         $stmt->execute([$amount, $sourceCurrency, $targetCurrency, $convertedAmount]);
     }
 
     public function getConversionResults($limit)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM conversion_results ORDER BY date DESC LIMIT :limit");
+        $stmt = $this->connection->prepare("SELECT * FROM conversion_results ORDER BY date DESC LIMIT :limit");
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
