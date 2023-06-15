@@ -75,7 +75,7 @@ $conversionResults = $converter->getConversionResults(5);
 
     <?php if (isset($convertedAmount)): ?>
         <?php if ($convertedAmount !== false): ?>
-            <p>Converted Amount: <?php echo $convertedAmount; ?></p>
+            <p>Converted Amount: <?php echo number_format($convertedAmount,4); ?></p>
         <?php else: ?>
             <p>Conversion failed. Please check your input.</p>
         <?php endif; ?>
