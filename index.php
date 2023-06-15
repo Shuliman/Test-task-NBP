@@ -10,12 +10,12 @@ $dbName = 'currency_converter';
 $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8", $dbUser, $dbPass);
 $converter = new CurrencyConverter($pdo);
 
-// Обработка формы
+//Form processing
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //Data validation and filtering
     $amount = filter_input(INPUT_POST, 'amount', FILTER_VALIDATE_FLOAT);
-    $sourceCurrency = filter_input(INPUT_POST, 'source_currency', FILTER_SANITIZE_STRING);
-    $targetCurrency = filter_input(INPUT_POST, 'target_currency', FILTER_SANITIZE_STRING);
+    $sourceCurrency = filter_input(INPUT_POST, 'source_currency', FILTER_SANITIZE_SPECIAL_CHARS);
+    $targetCurrency = filter_input(INPUT_POST, 'target_currency', FILTER_SANITIZE_SPECIAL_CHARS);
 
     if ($amount !== false && $sourceCurrency !== null && $targetCurrency !== null) {
         //Conversion of amount
@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 
 //Getting a list of recent conversion results
 $conversionResults = $converter->getConversionResults();
