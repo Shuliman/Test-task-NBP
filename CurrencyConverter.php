@@ -8,8 +8,8 @@ class CurrencyConverter
     {
         // Konfiguracja połączenia z bazą danych
         $dbHost = 'localhost';
-        $dbUser = 'username';
-        $dbPass = 'password';
+        $dbUser = 'root';
+        $dbPass = '';
         $dbName = 'currency_converter';
 
         $this->db = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8", $dbUser, $dbPass);
@@ -68,7 +68,9 @@ class CurrencyConverter
         $query = 'INSERT INTO conversions (amount, source_currency, target_currency, converted_amount) VALUES (:amount, :source_currency, :target_currency, :converted_amount)';
         $statement = $this->db->prepare($query);
         $statement->bindParam(':amount', $amount, PDO::PARAM_STR);
-        $statement->bindParam(':source_currency', $sourceCurrency, PDO::PARAM_STR);
+        $statement->bindParam('Wystąpił błąd podczas przewalutowania.
+
+        :source_currency', $sourceCurrency, PDO::PARAM_STR);
         $statement->bindParam(':target_currency', $targetCurrency, PDO::PARAM_STR);
         $statement->bindParam(':converted_amount', $convertedAmount, PDO::PARAM_STR);
         $statement->execute();
