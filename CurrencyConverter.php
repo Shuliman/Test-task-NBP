@@ -12,7 +12,7 @@ class CurrencyConverter
 
     public $connection;
 
-    public function __construct($config)
+    public function __construct(array $config)
     {
         $this->serverName = $config['db']['host'];
         $this->database = $config['db']['dbname'];
@@ -25,7 +25,7 @@ class CurrencyConverter
         $this->currencies = $this->fetchCurrencies();
     }
 
-    public function convertCurrency($amount, $sourceCurrency, $targetCurrency)
+    public function convertCurrency(float $amount, string $sourceCurrency, string $targetCurrency): float
     {
         $exchangeRates = $this->fetchExchangeRates();
 
@@ -48,7 +48,7 @@ class CurrencyConverter
         return $convertedAmount;
     }
 
-    private function fetchCurrencies()
+    private function fetchCurrencies(): array
     {
         $exchangeRates = $this->fetchExchangeRates();
 
@@ -62,7 +62,7 @@ class CurrencyConverter
         return $currencies;
     }
 
-    private function fetchExchangeRates()
+    private function fetchExchangeRates(): array|false
     {
         $url = 'http://api.nbp.pl/api/exchangerates/tables/A?format=json';
 
@@ -93,22 +93,30 @@ class CurrencyConverter
         return $exchangeRates;
     }
 
-    public function saveConversionResult($amount, $sourceCurrency, $targetCurrency, $convertedAmount)
+    public function saveConversionResult(float $amount, string $sourceCurrency, string $targetCurrency, float $convertedAmount): void
     {
-        $stmt = $this->connection->prepare("INSERT INTO conversion_results (amount, source_currency, target_currency, converted_amount, date) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->execute([$amount, $sourceCurrency, $targetCurrency, $convertedAmount]);
+        try {
+            $stmt = $this->connection->prepare("INSERT INTO conversion_results (amount, source_currency, target_currency, converted_amount, date) VALUES (?, ?, ?, ?, NOW())");
+            $stmt->execute([$amount, $sourceCurrency, $targetCurrency, $convertedAmount]);
+        } catch (PDOException $e) {
+            throw new Exception("Error when saving conversion results");
+        }
     }
 
-    public function getConversionResults($limit)
+    public function getConversionResults(int $limit): array
     {
-        $stmt = $this->connection->prepare("SELECT * FROM conversion_results ORDER BY date DESC LIMIT :limit");
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $results;
+        try {
+            $stmt = $this->connection->prepare("SELECT * FROM conversion_results ORDER BY date DESC LIMIT :limit");
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception("Error when getting conversion results");
+        }
     }
 
-    public function getCurrencies()
+    public function getCurrencies(): array
     {
         return $this->currencies;
     }
