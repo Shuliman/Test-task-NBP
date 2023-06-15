@@ -1,7 +1,42 @@
+<?php
+
+require_once 'CurrencyConverter.php';
+
+//Creating a CurrencyConverter instance with passing PDO dependency
+$dbHost = 'localhost';
+$dbUser = 'root';
+$dbPass = '';
+$dbName = 'currency_converter';
+$pdo = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8", $dbUser, $dbPass);
+$converter = new CurrencyConverter($pdo);
+
+// Обработка формы
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    //Data validation and filtering
+    $amount = filter_input(INPUT_POST, 'amount', FILTER_VALIDATE_FLOAT);
+    $sourceCurrency = filter_input(INPUT_POST, 'source_currency', FILTER_SANITIZE_STRING);
+    $targetCurrency = filter_input(INPUT_POST, 'target_currency', FILTER_SANITIZE_STRING);
+
+    if ($amount !== false && $sourceCurrency !== null && $targetCurrency !== null) {
+        //Conversion of amount
+        $convertedAmount = $converter->convertCurrency($amount, $sourceCurrency, $targetCurrency);
+
+        if ($convertedAmount !== false) {
+            //Saving the result
+            $converter->saveConversionResult($amount, $sourceCurrency, $targetCurrency, $convertedAmount);
+        }
+    }
+}
+
+//Getting a list of recent conversion results
+$conversionResults = $converter->getConversionResults();
+
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Kursy walut</title>
+    <title>Currency Converter</title>
     <style>
         table {
             border-collapse: collapse;
@@ -14,75 +49,60 @@
     </style>
 </head>
 <body>
-    <h1>Kursy walut</h1>
+    <h1>Currency Converter</h1>
 
-    <?php
-    require_once 'CurrencyConverter.php';
-
-    // Sprawdzanie czy formularz został przesłany
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $amount = $_POST['amount'];
-        $sourceCurrency = $_POST['source_currency'];
-        $targetCurrency = $_POST['target_currency'];
-
-        // Walidacja danych wejściowych
-        if (!empty($amount) && is_numeric($amount) && $amount > 0 && !empty($sourceCurrency) && !empty($targetCurrency)) {
-            $converter = new CurrencyConverter();
-            $convertedAmount = $converter->convertCurrency($amount, $sourceCurrency, $targetCurrency);
-
-            if ($convertedAmount !== false) {
-                // Zapisywanie wyników przewalutowań do bazy danych
-                $converter->saveConversionResult($amount, $sourceCurrency, $targetCurrency, $convertedAmount);
-
-                echo "<p>Przewalutowano $amount $sourceCurrency na $convertedAmount $targetCurrency.</p>";
-            } else {
-                echo "<p>Wystąpił błąd podczas przewalutowania.</p>";
-            }
-        } else {
-            echo "<p>Wprowadź poprawne dane.</p>";
-        }
-    }
-    ?>
-
-    <h2>Przewalutowanie</h2>
+    <h2>Convert Currency</h2>
     <form method="POST">
-        Kwota: <input type="text" name="amount" required>
-        Waluta źródłowa:
-        <select name="source_currency" required>
-            <option value="PLN">PLN</option>
-            <option value="EUR">EUR</option>
+        <label for="amount">Amount:</label>
+        <input type="text" name="amount" id="amount" required><br>
+
+        <label for="source_currency">Source Currency:</label>
+        <select name="source_currency" id="source_currency" required>
             <option value="USD">USD</option>
-        </select>
-        Waluta docelowa:
-        <select name="target_currency" required>
-            <option value="PLN">PLN</option>
             <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+        </select><br>
+
+        <label for="target_currency">Target Currency:</label>
+        <select name="target_currency" id="target_currency" required>
             <option value="USD">USD</option>
-        </select>
-        <input type="submit" value="Przewalutuj">
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+        </select><br>
+
+        <input type="submit" value="Convert">
     </form>
 
-    <h2>Ostatnie przewalutowania</h2>
-    <?php
-    // Wyświetlanie tabeli z ostatnimi wynikami przewalutowań
-    $converter = new CurrencyConverter();
-    $conversionResults = $converter->getConversionResults();
+    <?php if (isset($convertedAmount)): ?>
+        <?php if ($convertedAmount !== false): ?>
+            <p>Converted Amount: <?php echo $convertedAmount; ?></p>
+        <?php else: ?>
+            <p>Conversion failed. Please check your input.</p>
+        <?php endif; ?>
+    <?php endif; ?>
 
-    if (!empty($conversionResults)) {
-        echo '<table>';
-        echo '<tr><th>Kwota</th><th>Waluta źródłowa</th><th>Waluta docelowa</th><th>Przewalutowana kwota</th></tr>';
-        foreach ($conversionResults as $result) {
-            echo '<tr>';
-            echo "<td>{$result['amount']}</td>";
-            echo "<td>{$result['source_currency']}</td>";
-            echo "<td>{$result['target_currency']}</td>";
-            echo "<td>{$result['converted_amount']}</td>";
-            echo '</tr>';
-        }
-        echo '</table>';
-    } else {
-        echo '<p>Brak wyników przewalutowań.</p>';
-    }
-    ?>
+    <h2>Conversion Results</h2>
+    <?php if (!empty($conversionResults)): ?>
+        <table>
+            <tr>
+                <th>Amount</th>
+                <th>Source Currency</th>
+                <th>Target Currency</th>
+                <th>Converted Amount</th>
+                <th>Date</th>
+            </tr>
+            <?php foreach ($conversionResults as $result): ?>
+                <tr>
+                    <td><?php echo $result['amount']; ?></td>
+                    <td><?php echo $result['source_currency']; ?></td>
+                    <td><?php echo $result['target_currency']; ?></td>
+                    <td><?php echo $result['converted_amount']; ?></td>
+                    <td><?php echo $result['date']; ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p>No conversion results available.</p>
+    <?php endif; ?>
 </body>
 </html>
