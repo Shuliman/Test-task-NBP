@@ -21,10 +21,14 @@ class CurrencyConverter
             return false;
         }
 
+        // Convert source currency to PLN
         $sourceRate = $exchangeRates[$sourceCurrency];
-        $targetRate = $exchangeRates[$targetCurrency];
+        $plnAmount = $amount * $sourceRate;
 
-        $convertedAmount = $amount * ($targetRate / $sourceRate);
+        // Convert PLN to target currency
+        $targetRate = $exchangeRates[$targetCurrency];
+        $convertedAmount = $plnAmount / $targetRate;
+
         return $convertedAmount;
     }
 
@@ -53,6 +57,9 @@ class CurrencyConverter
             $exchangeRates[$currency] = $rate['mid'];
         }
 
+        // Add Polish Zloty (PLN) to exchange rates
+        $exchangeRates['PLN'] = 1.0;
+
         return $exchangeRates;
     }
 
@@ -62,11 +69,17 @@ class CurrencyConverter
         $stmt->execute([$amount, $sourceCurrency, $targetCurrency, $convertedAmount]);
     }
 
-    public function getConversionResults()
+    public function getConversionResults($limit)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM conversion_results ORDER BY date DESC LIMIT 10");
+        $stmt = $this->pdo->prepare("SELECT * FROM conversion_results ORDER BY date DESC LIMIT :limit");
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $results;
+    }
+
+    public function getCurrencies()
+    {
+        return ['PLN', 'USD', 'EUR', 'GBP', 'UAH', 'AUD']; // Add more currencies here
     }
 }
