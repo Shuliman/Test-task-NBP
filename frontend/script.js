@@ -1,4 +1,4 @@
-const API = 'http://localhost/Test%20task%20NBP/api.php';
+const API = 'http://localhost/Test%20task%20NBP/backend/api.php';
   
 // Function to load currencies into dropdown lists
 function loadCurrencies() {
