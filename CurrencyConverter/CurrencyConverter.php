@@ -1,5 +1,12 @@
 <?php
 
+namespace CurrencyConverter;
+
+use CurrencyConverter\Models\ConversionResult;
+use PDO;
+use PDOException;
+use Exception;
+
 class CurrencyConverter
 {
     private $serverName;
@@ -20,9 +27,14 @@ class CurrencyConverter
         $this->password = $config['db']['password'];
         $this->options = $config['db']['options'];
         $this->tableName = $config['db']['tableName'];
-        $this->connection = new PDO("mysql:host=$this->serverName;dbname=$this->database", $this->username, $this->password, $this->options);
+        $this->connection = $this->makeConnection();
 
         $this->currencies = $this->fetchCurrencies();
+    }
+
+    private function makeConnection(): PDO
+    {
+        return new PDO("mysql:host=$this->serverName;dbname=$this->database", $this->username, $this->password, $this->options);
     }
 
     public function convertCurrency(float $amount, string $sourceCurrency, string $targetCurrency): float
@@ -93,11 +105,11 @@ class CurrencyConverter
         return $exchangeRates;
     }
 
-    public function saveConversionResult(float $amount, string $sourceCurrency, string $targetCurrency, float $convertedAmount): void
+    public function saveConversionResult(ConversionResult $result): void
     {
         try {
-            $stmt = $this->connection->prepare("INSERT INTO conversion_results (amount, source_currency, target_currency, converted_amount, date) VALUES (?, ?, ?, ?, NOW())");
-            $stmt->execute([$amount, $sourceCurrency, $targetCurrency, $convertedAmount]);
+            $stmt = $this->connection->prepare("INSERT INTO $this->tableName (amount, source_currency, target_currency, converted_amount, date) VALUES (?, ?, ?, ?, NOW())");
+            $stmt->execute([$result->amount, $result->sourceCurrency, $result->targetCurrency, $result->convertedAmount]);
         } catch (PDOException $e) {
             throw new Exception("Error when saving conversion results");
         }
@@ -106,7 +118,7 @@ class CurrencyConverter
     public function getConversionResults(int $limit): array
     {
         try {
-            $stmt = $this->connection->prepare("SELECT * FROM conversion_results ORDER BY date DESC LIMIT :limit");
+            $stmt = $this->connection->prepare("SELECT * FROM $this->tableName ORDER BY date DESC LIMIT :limit");
             $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
             $stmt->execute();
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -120,4 +132,5 @@ class CurrencyConverter
     {
         return $this->currencies;
     }
+
 }

@@ -1,11 +1,15 @@
 <?php
 
-require_once 'CurrencyConverter.php';
+require_once 'CurrencyConverter/CurrencyConverter.php';
+require_once 'CurrencyConverter/Models/ConversionResult.php';
+
+use CurrencyConverter\CurrencyConverter;
+use CurrencyConverter\Models\ConversionResult;;
+
 $config = require 'config.php';
 
 $converter = new CurrencyConverter($config);
 
-// Form handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate and filter input data
     $amount = filter_input(INPUT_POST, 'amount', FILTER_VALIDATE_FLOAT);
@@ -17,8 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $convertedAmount = $converter->convertCurrency($amount, $sourceCurrency, $targetCurrency);
 
         if ($convertedAmount !== false) {
+            // Create ConversionResult object
+            $result = new ConversionResult($amount, $sourceCurrency, $targetCurrency, $convertedAmount, date('Y-m-d H:i:s'));
+
             // Save conversion result
-            $converter->saveConversionResult($amount, $sourceCurrency, $targetCurrency, $convertedAmount);
+            $converter->saveConversionResult($result);
         }
     }
 }
