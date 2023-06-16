@@ -24,3 +24,7 @@ CREATE TABLE IF NOT EXISTS conversion_results (
 4. Ensure that you have PHP and the necessary extensions installed on your server or local environment.
 
 5. Start the PHP development server or configure a virtual host to serve the project.
+
+6. Change API route in const from `frontend/index.js`
+
+7. Open in your browser `frontend/index.html`
