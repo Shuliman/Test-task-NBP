@@ -1,4 +1,4 @@
-const API = 'http://127.0.0.1/backend/api.php';
+const API = 'http://task-nbp.onrender.com/backend/api.php';
   
 // Function to load currencies into dropdown lists
 function loadCurrencies() {
