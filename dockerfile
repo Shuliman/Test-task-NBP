@@ -33,8 +33,8 @@ return [\n\
 #Change the owner of the application files to a web server user
 RUN chown -R www-data:www-data /var/www/html
 
-#Open port 80 for the web server
-EXPOSE 80
+#Open port for the web server
+EXPOSE 443
 
 #Create an initialization script
 RUN printf "#!/bin/bash\n\
