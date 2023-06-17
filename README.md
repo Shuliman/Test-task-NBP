@@ -2,7 +2,15 @@
 
 This is a test project for a simple currency converter that uses data from NBP (Narodowy Bank Polski) to convert an amount from one currency to another.
 
-## Installation and Setup Instructions
+## Docker Instructions
+
+1. Build the Docker image using the Dockerfile in the root directory of the project. You can do this by running the following command in your 
+`docker build -t my-currency-converter .`
+2. Run the Docker container using the image you just built. This can be done with the following command:
+`docker run -p 80:80 my-currency-converter`
+3. After the container starts, your application will be accessible at http://localhost in your web browser.
+
+## Usual Installation and Setup Instructions
 
 1. Clone the repository to your local machine:
 

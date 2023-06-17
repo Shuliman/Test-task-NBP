@@ -3,6 +3,10 @@
 require_once 'CurrencyConverter/CurrencyConverter.php';
 require_once 'CurrencyConverter/Models/ConversionResult.php';
 
+//solves problems in the docker for end-to-end frontend and backend
+header("Access-Control-Allow-Origin: *"); 
+header("Access-Control-Allow-Headers: *");
+
 use CurrencyConverter\CurrencyConverter;
 use CurrencyConverter\Models\ConversionResult;
 

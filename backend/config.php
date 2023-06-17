@@ -1,10 +1,10 @@
 <?php
 return [
     'db' => [
-        'host' => 'localhost',
+        'host' => '172.17.0.2',
         'dbname' => 'currency_converter',
         'username' => 'root',
-        'password' => '',
+        'password' => 'your_password',
         'tableName' => 'conversion_results',
         'options' => [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

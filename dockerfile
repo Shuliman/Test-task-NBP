@@ -1,28 +1,24 @@
-# Начинаем с официального образа PHP с Apache. Используем PHP 8.
 FROM php:8.0-apache
 
-# Устанавливаем расширение PHP PDO для MySQL
+#Install PHP PDO extension for MySQL
 RUN docker-php-ext-install pdo_mysql
 
-# Включаем модуль mod_rewrite для Apache
+#Enabling the mod_rewrite module for Apache
 RUN a2enmod rewrite
 
-# Устанавливаем MySQL сервер
-RUN apt-get update && apt-get install -y mariadb-server && service mariadb start
+#Installing the MySQL server
+RUN apt-get update && apt-get install -y mariadb-server 
 
-# Копируем файлы приложения в контейнер
-COPY ./backend /var/www/html/
+#Copying the application files into a container
+COPY ./backend /var/www/html/backend
 COPY ./frontend /var/www/html/frontend
 
-# Создаем базу данных и таблицу
-RUN echo "CREATE DATABASE mydb; USE mydb; CREATE TABLE IF NOT EXISTS conversion_results (id INT AUTO_INCREMENT PRIMARY KEY, amount DECIMAL(10, 4) NOT NULL, source_currency VARCHAR(3) NOT NULL, target_currency VARCHAR(3) NOT NULL, converted_amount DECIMAL(10, 4) NOT NULL, date DATETIME NOT NULL);" | mysql
-
-# Заполняем config.php
-RUN echo "<?php\n\
+#Filling out config.php
+RUN printf "<?php\n\
 \n\
 return [\n\
     'db' => [\n\
-        'host' => 'localhost',\n\
+        'host' => '127.0.0.1',\n\
         'dbname' => 'mydb',\n\
         'username' => 'root',\n\
         'password' => 'toor',\n\
@@ -34,9 +30,21 @@ return [\n\
     ],\n\
 ];\n" > /var/www/html/backend/config.php
 
-
-# Меняем владельца файлов приложения на пользователя веб-сервера
+#Change the owner of the application files to a web server user
 RUN chown -R www-data:www-data /var/www/html
 
-# Открываем порт 80 для веб-сервера
+#Open port 80 for the web server
 EXPOSE 80
+
+#Create an initialization script
+RUN printf "#!/bin/bash\n\
+service mariadb start\n\
+mysql -uroot -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY 'toor';\"\n\
+mysql -uroot -ptoor -e \"FLUSH PRIVILEGES;\"\n\
+mysql -uroot -ptoor -e \"CREATE DATABASE IF NOT EXISTS mydb; USE mydb; CREATE TABLE IF NOT EXISTS conversion_results (id INT AUTO_INCREMENT PRIMARY KEY, amount DECIMAL(10, 4) NOT NULL, source_currency VARCHAR(3) NOT NULL, target_currency VARCHAR(3) NOT NULL, converted_amount DECIMAL(10, 4) NOT NULL, date DATETIME NOT NULL);\"\n\
+apache2-foreground\n" > /usr/local/bin/init.sh \
+&& chmod +x /usr/local/bin/init.sh
+
+#Run the initialization script when the container starts
+CMD ["/usr/local/bin/init.sh"]
+

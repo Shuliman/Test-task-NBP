@@ -34,7 +34,7 @@ class CurrencyConverter
 
     private function makeConnection(): PDO
     {
-        return new PDO("mysql:host=$this->serverName;dbname=$this->database", $this->username, $this->password, $this->options);
+        return new PDO("mysql:host=$this->serverName;port=3306;dbname=$this->database", $this->username, $this->password, $this->options);
     }
 
     public function convertCurrency(float $amount, string $sourceCurrency, string $targetCurrency): float
