@@ -34,44 +34,51 @@ class CurrencyConverter
 
     private function makeConnection(): PDO
     {
-        return new PDO("mysql:host=$this->serverName;port=3306;dbname=$this->database", $this->username, $this->password, $this->options);
+        try {
+            return new PDO("mysql:host=$this->serverName;port=3306;dbname=$this->database", $this->username, $this->password, $this->options);
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            throw $e;
+        }
     }
 
     public function convertCurrency(float $amount, string $sourceCurrency, string $targetCurrency): float
     {
-        $exchangeRates = $this->fetchExchangeRates();
-
-        if ($exchangeRates === false) {
-            return false;
+        try {
+            $exchangeRates = $this->fetchExchangeRates();
+    
+            if (!isset($exchangeRates[$sourceCurrency]) || !isset($exchangeRates[$targetCurrency])) {
+                throw new Exception('Currency not supported: ' . $sourceCurrency . ' or ' . $targetCurrency);
+            }
+    
+            // Convert source currency to PLN
+            $sourceRate = $exchangeRates[$sourceCurrency];
+            $plnAmount = $amount * $sourceRate;
+    
+            // Convert PLN to target currency
+            $targetRate = $exchangeRates[$targetCurrency];
+            $convertedAmount = $plnAmount / $targetRate;
+    
+            return $convertedAmount;
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            throw $e;
         }
-
-        if (!isset($exchangeRates[$sourceCurrency]) || !isset($exchangeRates[$targetCurrency])) {
-            return false;
-        }
-
-        // Convert source currency to PLN
-        $sourceRate = $exchangeRates[$sourceCurrency];
-        $plnAmount = $amount * $sourceRate;
-
-        // Convert PLN to target currency
-        $targetRate = $exchangeRates[$targetCurrency];
-        $convertedAmount = $plnAmount / $targetRate;
-
-        return $convertedAmount;
     }
 
     private function fetchCurrencies(): array
     {
-        $exchangeRates = $this->fetchExchangeRates();
-
-        if ($exchangeRates === false) {
-            return [];
+        try {
+            $exchangeRates = $this->fetchExchangeRates();
+    
+            $currencies[] = 'PLN'; // Add PLN to the currencies array
+            $currencies = array_keys($exchangeRates);
+    
+            return $currencies;
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            throw $e;
         }
-
-        $currencies[] = 'PLN'; // Add PLN to the currencies array
-        $currencies = array_keys($exchangeRates);
-
-        return $currencies;
     }
 
     private function fetchExchangeRates(): array|false
@@ -81,13 +88,17 @@ class CurrencyConverter
         $response = file_get_contents($url);
 
         if ($response === false) {
-            return false;
+            throw new Exception('Unable to retrieve data from the URL: ' . $url);
         }
-
+    
         $data = json_decode($response, true);
-
+    
+        if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('JSON decode error: ' . json_last_error_msg());
+        }
+    
         if (empty($data)) {
-            return false;
+        throw new Exception('No data retrieved from the API');
         }
 
         $rates = $data[0]['rates'];
