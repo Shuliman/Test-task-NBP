@@ -13,23 +13,6 @@ RUN apt-get update && apt-get install -y mariadb-server
 COPY ./backend /var/www/html/backend
 COPY ./frontend /var/www/html/frontend
 
-#Filling out config.php
-RUN printf "<?php\n\
-\n\
-return [\n\
-    'db' => [\n\
-        'host' => '127.0.0.1',\n\
-        'dbname' => 'mydb',\n\
-        'username' => 'root',\n\
-        'password' => 'toor',\n\
-        'tableName' => 'conversion_results',\n\
-        'options' => [\n\
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,\n\
-            PDO::ATTR_STRINGIFY_FETCHES => false,\n\
-        ],\n\
-    ],\n\
-];\n" > /var/www/html/backend/config.php
-
 #Change the owner of the application files to a web server user
 RUN chown -R www-data:www-data /var/www/html
 
@@ -47,4 +30,3 @@ apache2-foreground\n" > /usr/local/bin/init.sh \
 
 #Run the initialization script when the container starts
 CMD ["/usr/local/bin/init.sh"]
-
