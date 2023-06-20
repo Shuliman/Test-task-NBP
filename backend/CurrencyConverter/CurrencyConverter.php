@@ -70,8 +70,6 @@ class CurrencyConverter
     {
         try {
             $exchangeRates = $this->fetchExchangeRates();
-    
-            $currencies[] = 'PLN'; // Add PLN to the currencies array
             $currencies = array_keys($exchangeRates);
     
             return $currencies;
