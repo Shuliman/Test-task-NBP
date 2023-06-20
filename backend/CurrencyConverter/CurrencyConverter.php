@@ -83,9 +83,9 @@ class CurrencyConverter
     {
         $url = 'http://api.nbp.pl/api/exchangerates/tables/A?format=json';
 
-        $response = file_get_contents($url);
-
-        if ($response === false) {
+        try {
+            $response = file_get_contents($url);
+        } catch (PDOException $e) {
             throw new Exception('Unable to retrieve data from the URL: ' . $url);
         }
     
