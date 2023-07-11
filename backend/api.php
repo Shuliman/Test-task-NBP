@@ -18,10 +18,7 @@ $container = $containerBuilder->build();
 $config = require 'config.php';
 
 $container->set('config', $config);
-$container->set(DatabaseConnection::class, DI\create(DatabaseConnection::class)->constructor(DI\get('config')));
-$container->set(CurrencyDataProvider::class, DI\create(CurrencyDataProvider::class)->constructor(DI\get(DatabaseConnection::class)));
-$container->set(CurrencyConverter::class, DI\create(CurrencyConverter::class)->constructor(DI\get(CurrencyDataProvider::class)));
-$container->set(ConversionResultRepository::class, DI\create(ConversionResultRepository::class)->constructor(DI\get(DatabaseConnection::class)));
+$container->set(DatabaseConnection::class, DI\autowire()->constructor(DI\get('config')));
 
 $currencyConverter = $container->get(CurrencyConverter::class);
 $conversionResultRepository = $container->get(ConversionResultRepository::class);
