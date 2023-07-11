@@ -1,13 +1,13 @@
 <?php
 
-namespace CurrencyConverter;
+namespace CurrencyConverterOld;
 
 use CurrencyConverter\Models\ConversionResult;
 use PDO;
 use PDOException;
 use Exception;
 
-class CurrencyConverter
+class CurrencyConverterOld
 {
     private $serverName;
     private $database;

@@ -1,4 +1,4 @@
-const API = 'https://task-nbp.onrender.com/backend/api.php';
+const API = 'http://localhost/Test-task-NBP/backend/api.php';
   
 function loadCurrencies() {
   fetch(API + '?currencies=true', {

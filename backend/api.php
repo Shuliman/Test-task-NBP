@@ -1,23 +1,36 @@
 <?php
+require_once 'vendor/autoload.php';
 
-require_once 'CurrencyConverter/CurrencyConverter.php';
-require_once 'CurrencyConverter/Models/ConversionResult.php';
+use CurrencyConverter\ConversionResultRepository;
+use CurrencyConverter\CurrencyConverter;
+use CurrencyConverter\CurrencyDataProvider;
+use CurrencyConverter\DatabaseConnection;
+use CurrencyConverter\Models\ConversionResult;
+use DI\ContainerBuilder;
 
 //solves problems in the docker for end-to-end frontend and backend
 header("Access-Control-Allow-Origin: *"); 
 header("Access-Control-Allow-Headers: *");
 
-use CurrencyConverter\CurrencyConverter;
-use CurrencyConverter\Models\ConversionResult;
+$containerBuilder = new ContainerBuilder();
+$container = $containerBuilder->build();
 
 $config = require 'config.php';
 
-try {
-    $converter = new CurrencyConverter($config);
+$container->set('config', $config);
+$container->set(DatabaseConnection::class, DI\create(DatabaseConnection::class)->constructor(DI\get('config')));
+$container->set(CurrencyDataProvider::class, DI\create(CurrencyDataProvider::class)->constructor(DI\get(DatabaseConnection::class)));
+$container->set(CurrencyConverter::class, DI\create(CurrencyConverter::class)->constructor(DI\get(CurrencyDataProvider::class)));
+$container->set(ConversionResultRepository::class, DI\create(ConversionResultRepository::class)->constructor(DI\get(DatabaseConnection::class)));
 
+$currencyConverter = $container->get(CurrencyConverter::class);
+$conversionResultRepository = $container->get(ConversionResultRepository::class);
+$currencyDataProvider = $container->get(CurrencyDataProvider::class);
+
+try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && filter_input(INPUT_GET, 'currencies', FILTER_VALIDATE_BOOLEAN)) {
         $response = [
-            'currencies' => $converter->getCurrencies()
+            'currencies' => $currencyDataProvider->getCurrencies()
         ];
 
         echo json_encode($response);
@@ -32,17 +45,17 @@ try {
 
         if ($amount !== false && $sourceCurrency !== null && $targetCurrency !== null) {
             //Convert sum
-            $convertedAmount = $converter->convertCurrency($amount, $sourceCurrency, $targetCurrency);
+            $convertedAmount = $currencyConverter->convertCurrency($amount, $sourceCurrency, $targetCurrency);
 
             if ($convertedAmount !== false) {
                 $result = new ConversionResult($amount, $sourceCurrency, $targetCurrency, $convertedAmount, date('Y-m-d H:i:s'));
 
                 //Saving the result of the conversion
-                $converter->saveConversionResult($result);
+                $conversionResultRepository->saveConversionResult($result);
             }
         }
         //Get list of the latest conversion results
-        $conversionResults = $converter->getConversionResults(5);
+        $conversionResults = $conversionResultRepository->getConversionResults(5);
 
         //Return data in JSON format
         header('Content-Type: application/json');

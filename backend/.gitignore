@@ -1,3 +1,4 @@
 .vscode/
 .gitigrone
-backend/config.php
+config.php
+vendor/
